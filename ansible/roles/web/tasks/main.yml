@@ -1,4 +1,5 @@
 ---
+# App Setup
 - name: Ensure app directory exists
   file:
     path: /opt/app
@@ -9,101 +10,123 @@
 
 - name: Copy application files to EC2 instance
   copy:
-    src: ../app/
+    src: "{{ playbook_dir }}/../app/"
     dest: /opt/app/
     owner: ubuntu
     group: ubuntu
-    mode: '0755'
-  notify: Restart Gunicorn
+  become: yes
 
 - name: Ensure Python 3 venv package is installed
   apt:
     name: python3-venv
     state: present
-  become: true
+    update_cache: yes
 
 - name: Create virtual environment
   command: python3 -m venv /opt/app/venv
   args:
-    creates: /opt/app/venv
+    creates: /opt/app/venv/bin/activate
 
 - name: Install Python requirements
   command: /opt/app/venv/bin/pip install -r /opt/app/requirements.txt
-  args:
-    chdir: /opt/app
 
+# Gunicorn Setup
 - name: Copy Gunicorn systemd service file
   copy:
     src: gunicorn.service
     dest: /etc/systemd/system/gunicorn.service
+    owner: root
+    group: root
+    mode: '0644'
+  become: yes
 
 - name: Reload systemd daemon
-  command: systemctl daemon-reexec
+  command: systemctl daemon-reload
+  become: yes
 
 - name: Enable and start Gunicorn service
   systemd:
     name: gunicorn
     enabled: yes
     state: restarted
+  become: yes
 
-
-- name: Start Flask app with Gunicorn (temporary)
-  shell: |
-    nohup /opt/app/venv/bin/gunicorn -w 4 -b 0.0.0.0:80 app:app &
-  args:
-    chdir: /opt/app
-
-- name: Restart Gunicorn
-  shell: |
-    pkill gunicorn || true
-    nohup /opt/app/venv/bin/gunicorn -w 4 -b 0.0.0.0:80 app:app &
-  args:
-    chdir: /opt/app
-
+# Nginx Setup
 - name: Copy Nginx config template
   template:
     src: nginx_flask.j2
-    dest: /etc/nginx/sites-available/flaskapp
-    mode: '0644'
+    dest: /etc/nginx/sites-available/flask_app
+  become: yes
 
 - name: Remove default Nginx site
   file:
     path: /etc/nginx/sites-enabled/default
     state: absent
+  become: yes
 
 - name: Enable Flask Nginx site
   file:
-    src: /etc/nginx/sites-available/flaskapp
-    dest: /etc/nginx/sites-enabled/flaskapp
+    src: /etc/nginx/sites-available/flask_app
+    dest: /etc/nginx/sites-enabled/flask_app
     state: link
     force: yes
+  become: yes
 
 - name: Restart Nginx
   service:
     name: nginx
     state: restarted
+  become: yes
 
-- name: Install MySQL server
+# MySQL Setup
+- name: Install MySQL Server
   apt:
     name: mysql-server
     state: present
     update_cache: yes
+  become: yes
 
 - name: Ensure MySQL is running
   service:
     name: mysql
     state: started
-    enabled: true
+    enabled: yes
+  become: yes
 
-- name: Create MySQL database
-  mysql_db:
+- name: Install PyMySQL for Ansible MySQL modules
+  apt:
+    name: python3-pymysql
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Set MySQL root password and enable password auth
+  shell: |
+    mysql -u root -p'{{ mysql_root_password }}' <<EOF
+    ALTER USER 'root'@'localhost' IDENTIFIED WITH mysql_native_password BY '{{ mysql_root_password }}';
+    FLUSH PRIVILEGES;
+    EOF
+  args:
+    executable: /bin/bash
+  become: yes
+
+- name: Create application database
+  community.mysql.mysql_db:
     name: epadb
     state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_host: 127.0.0.1
+    login_port: 3306
 
-- name: Create MySQL user
-  mysql_user:
-    name: user
-    password: password
-    priv: 'epadb.*:ALL'
+- name: Create application user
+  community.mysql.mysql_user:
+    name: appuser
+    password: "{{ mysql_app_password }}"
+    priv: "epadb.*:ALL"
     host: localhost
     state: present
+    login_user: root
+    login_password: "{{ mysql_root_password }}"
+    login_host: 127.0.0.1
+    login_port: 3306
