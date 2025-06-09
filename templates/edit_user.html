@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit User</title>
+</head>
+<body>
+    <h1>Edit User</h1>
+    <form method="POST">
+        <label>Username:</label>
+        <input type="text" name="username" value="{{ user.username }}" required>
+        <button type="submit">Update</button>
+    </form>
+    <a href="{{ url_for('users') }}">Back to Users</a>
+</body>
+</html>
