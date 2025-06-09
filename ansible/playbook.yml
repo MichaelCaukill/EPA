@@ -1,4 +1,7 @@
-- hosts: web
-  become: yes
+---
+- name: Provision web server
+  hosts: web
+  remote_user: ubuntu     # or whatever user you SSH in as
+  become: yes             # ← enable sudo for all tasks in this play
   roles:
     - web

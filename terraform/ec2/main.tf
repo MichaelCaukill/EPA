@@ -51,6 +51,12 @@ resource "aws_instance" "example" {
 }
 
 resource "aws_key_pair" "deployer" {
-  key_name   = "deployer-key"
+  key_name   = "test-key"
   public_key = file(var.public_key_path)
+
+  lifecycle {
+    create_before_destroy = false
+    prevent_destroy       = false
+    ignore_changes        = [public_key]
+  }
 }

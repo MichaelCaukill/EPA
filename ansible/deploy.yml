@@ -1,0 +1,43 @@
+---
+- name: Deploy Flask app
+  hosts: web
+  become: yes
+
+  vars:
+    app_dir: /home/ubuntu/flask_app
+
+  tasks:
+    - name: Ensure app directory exists
+      file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: ubuntu
+        group: ubuntu
+
+    - name: Copy application files
+      copy:
+        src: files/
+        dest: "{{ app_dir }}/"
+        owner: ubuntu
+        group: ubuntu
+        mode: '0644'
+
+    - name: Create Python virtual environment
+      command: python3 -m venv venv
+      args:
+        chdir: "{{ app_dir }}"
+      become_user: ubuntu
+
+    - name: Install Python requirements
+      pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ app_dir }}/venv"
+      become_user: ubuntu
+
+    - name: Start Flask app with Gunicorn (temporary)
+      command: "{{ app_dir }}/venv/bin/gunicorn --bind 0.0.0.0:5000 app:app"
+      args:
+        chdir: "{{ app_dir }}"
+      async: 0
+      poll: 0
+      become_user: ubuntu

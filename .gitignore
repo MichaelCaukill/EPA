@@ -1,16 +1,15 @@
+# Environment variables
 .env
-__pycache__/
-*.pyc
-terraform.tfvars
-*.tfstate
-*.tfstate.*
-.terraform/
-__pycache__/
-*.pyc
-.env
-*.tfstate
-*.tfstate.*
-.terraform/
-terraform.tfvars
-*.pem
 
+# Python cache files
+__pycache__/
+*.pyc
+
+# Terraform state and variables
+*.tfstate
+*.tfstate.*
+.terraform/
+terraform.tfvars
+
+# Secrets / Certificates
+*.pem

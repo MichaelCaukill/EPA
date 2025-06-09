@@ -7,8 +7,8 @@ provider "aws" {
 module "vpc" {
   source = "./terraform/vpc"
 
-  aws_availability_a = "eu-west-1a"
-  aws_availability_b = "eu-west-1b"
+  aws_availability_a = "eu-west-2a"
+  aws_availability_b = "eu-west-2b"
   open_internet       = var.open_internet
 }
 
@@ -17,7 +17,7 @@ module "ec2" {
 
   vpc_id_ec2      = module.vpc.vpc_id
   subnet_id_ec2   = module.vpc.subnet_id_a
-  ami_uk          = "ami-0c94855ba95c71c99" # Ubuntu 20.04 in eu-west-1
+  ami_uk          = "ami-01c0ed0b087735750" # Ubuntu 20.04 in eu-west-2
   type            = "t2.micro"
   open_internet   = var.open_internet
   public_key_path = var.public_key_path

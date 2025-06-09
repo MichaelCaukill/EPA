@@ -1,0 +1,13 @@
+[Unit]
+Description=Gunicorn daemon for Flask app
+After=network.target
+
+[Service]
+User=ubuntu
+Group=www-data
+WorkingDirectory=/opt/app
+ExecStart=/opt/app/venv/bin/gunicorn --workers 3 --bind 127.0.0.1:8000 app:app
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
