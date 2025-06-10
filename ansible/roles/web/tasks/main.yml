@@ -51,14 +51,30 @@
     state: restarted
   become: yes
 
-# Nginx Setup
-- name: Copy Nginx config template
+- name: Ensure Nginx is installed
+  apt:
+    name: nginx
+    state: present
+    update_cache: yes
+  become: yes
+
+- name: Ensure Nginx config directories exist
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  loop:
+    - /etc/nginx/sites-available
+    - /etc/nginx/sites-enabled
+  become: yes
+
+- name: Copy Nginx config template for Flask
   template:
     src: nginx_flask.j2
     dest: /etc/nginx/sites-available/flask_app
   become: yes
 
-- name: Remove default Nginx site
+- name: Remove default Nginx site (optional)
   file:
     path: /etc/nginx/sites-enabled/default
     state: absent
@@ -72,13 +88,12 @@
     force: yes
   become: yes
 
-- name: Restart Nginx
+- name: Reload Nginx
   service:
     name: nginx
-    state: restarted
+    state: reloaded
   become: yes
 
-# MySQL Setup
 - name: Install MySQL Server
   apt:
     name: mysql-server
@@ -130,3 +145,11 @@
     login_password: "{{ mysql_root_password }}"
     login_host: 127.0.0.1
     login_port: 3306
+    
+- name: Copy .env file to app directory
+  copy:
+    src: "{{ playbook_dir }}/../.env"
+    dest: /opt/app/.env
+    owner: ubuntu
+    group: ubuntu
+    mode: '0600'
