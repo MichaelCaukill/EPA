@@ -1,7 +1,27 @@
 ---
 - name: Provision web server
   hosts: web
-  remote_user: ubuntu     # or whatever user you SSH in as
-  become: yes             # ← enable sudo for all tasks in this play
+  become: yes
+
+  pre_tasks:
+    - name: Ensure /opt/EPA directory exists
+      file:
+        path: /opt/EPA
+        state: directory
+        mode: '0755'
+
+  tasks:
+    - name: Copy full project (including Docker config)
+      synchronize:
+        src: ../..
+        dest: /opt/EPA
+        recursive: yes
+        delete: yes
   roles:
     - web
+
+- name: Provision and run containers
+  hosts: web
+  become: yes
+  roles:
+    - web  # your existing role
