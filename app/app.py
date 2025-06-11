@@ -1,113 +1,72 @@
-from flask import Flask, render_template, redirect, url_for, request, session, flash
+# app.py
+from flask import Flask, render_template, request, redirect, url_for, flash
 from flask_sqlalchemy import SQLAlchemy
-from werkzeug.security import generate_password_hash, check_password_hash
-from dotenv import load_dotenv
 import os
 
-load_dotenv()
-
 app = Flask(__name__)
-app.secret_key = os.environ.get('SECRET_KEY', os.urandom(24))
-
-# Read DB connection string from .env or fallback
-app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv(
-    'DATABASE_URL', 'mysql+pymysql://user:password@localhost/epadb'
-)
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///app.db')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# Secret key for flash messages
+app.secret_key = os.getenv('SECRET_KEY', 'your-secret-key')
 
 db = SQLAlchemy(app)
 
-class User(db.Model):
+class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(80), unique=True, nullable=False)
-    password = db.Column(db.String(200), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
 
-@app.before_request
-def create_tables():
+# Create database tables if they don't exist
+with app.app_context():
     db.create_all()
 
 @app.route('/')
-def home():
-    return render_template('index.html')
+def index():
+    return redirect(url_for('list_items'))
 
-@app.route('/register', methods=['GET', 'POST'])
-def register():
+@app.route('/items')
+def list_items():
+    items = Item.query.all()
+    return render_template('list_items.html', items=items)
+
+@app.route('/items/new', methods=['GET', 'POST'])
+def create_item():
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if not username or not password:
-            flash('Both username and password are required.')
-            return redirect(url_for('register'))
-        if User.query.filter_by(username=username).first():
-            flash('Username already exists. Please choose a different one.')
-            return redirect(url_for('register'))
-        hashed_password = generate_password_hash(password, method='pbkdf2:sha256')
-        new_user = User(username=username, password=hashed_password)
-        db.session.add(new_user)
+        name = request.form['name']
+        description = request.form.get('description')
+        item = Item(name=name, description=description)
+        db.session.add(item)
         db.session.commit()
-        flash('Registration successful! Please log in.')
-        return redirect(url_for('login'))
-    return render_template('register.html')
+        flash('Item created successfully!')
+        return redirect(url_for('list_items'))
+    return render_template('create_item.html')
 
-@app.route('/login', methods=['GET', 'POST'])
-def login():
+@app.route('/items/<int:item_id>')
+def show_item(item_id):
+    item = Item.query.get_or_404(item_id)
+    return render_template('show_item.html', item=item)
+
+@app.route('/items/<int:item_id>/edit', methods=['GET', 'POST'])
+def edit_item(item_id):
+    item = Item.query.get_or_404(item_id)
     if request.method == 'POST':
-        username = request.form.get('username')
-        password = request.form.get('password')
-        if not username or not password:
-            flash('Both username and password are required.')
-            return redirect(url_for('login'))
-        user = User.query.filter_by(username=username).first()
-        if user and check_password_hash(user.password, password):
-            session['user_id'] = user.id
-            flash('Login successful!')
-            return redirect(url_for('dashboard'))
-        flash('Invalid credentials. Please try again.')
-    return render_template('login.html')
-
-@app.route('/dashboard')
-def dashboard():
-    if 'user_id' in session:
-        user = User.query.get(session['user_id'])
-        if user:
-            return render_template('dashboard.html', username=user.username)
-    return redirect(url_for('login'))
-
-@app.route('/logout')
-def logout():
-    session.pop('user_id', None)
-    flash('You have been logged out.')
-    return redirect(url_for('home'))
-
-@app.route('/users')
-def users():
-    if 'user_id' not in session:
-        return redirect(url_for('login'))
-    all_users = User.query.all()
-    return render_template('users.html', users=all_users)
-
-@app.route('/edit_user/<int:id>', methods=['GET', 'POST'])
-def edit_user(id):
-    user = User.query.get_or_404(id)
-    if request.method == 'POST':
-        username = request.form['username']
-        password = request.form['password']
-        if username:
-            user.username = username
-        if password:
-            user.password = generate_password_hash(password, method='pbkdf2:sha256')
+        item.name = request.form['name']
+        item.description = request.form.get('description')
         db.session.commit()
-        flash('User updated successfully.')
-        return redirect(url_for('users'))
-    return render_template('edit_user.html', user=user)
+        flash('Item updated successfully!')
+        return redirect(url_for('show_item', item_id=item.id))
+    return render_template('edit_item.html', item=item)
 
-@app.route('/delete_user/<int:id>', methods=['POST'])
-def delete_user(id):
-    user = User.query.get_or_404(id)
-    db.session.delete(user)
+@app.route('/items/<int:item_id>/delete', methods=['POST'])
+def delete_item(item_id):
+    item = Item.query.get_or_404(item_id)
+    db.session.delete(item)
     db.session.commit()
-    flash('User deleted successfully.')
-    return redirect(url_for('users'))
+    flash('Item deleted successfully!')
+    return redirect(url_for('list_items'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', debug=True)
+    # Use PORT environment variable or default to 8000
+    port = int(os.getenv('PORT', 8000))
+    app.run(host='0.0.0.0', port=port, debug=True)
