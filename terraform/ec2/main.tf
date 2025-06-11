@@ -50,13 +50,26 @@ resource "aws_instance" "example" {
   }
 }
 
-resource "aws_key_pair" "deployer" {
-  key_name   = "test-key"
-  public_key = file(var.public_key_path)
+# 1. Generate an RSA private key
+resource "tls_private_key" "deployer" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
 
-  lifecycle {
-    create_before_destroy = false
-    prevent_destroy       = false
-    ignore_changes        = [public_key]
-  }
+# 2. Create a unique suffix for the key name
+resource "random_id" "suffix" {
+  byte_length = 4
+}
+
+# 3. Register the public key with AWS as a key pair
+resource "aws_key_pair" "deployer" {
+  key_name   = "ephemeral-key-${random_id.suffix.hex}"
+  public_key = tls_private_key.deployer.public_key_openssh
+}
+
+# 4. (Optional) Save the private key locally for SSH access
+resource "local_file" "private_key" {
+  content          = tls_private_key.deployer.private_key_pem
+  filename         = "${path.module}/ephemeral_key.pem"
+  file_permission  = "0600"
 }
