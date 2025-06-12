@@ -1,0 +1,9 @@
+ID,As a...,I want to...,So that...
+1,User,"Create, view, edit, and delete items",I can manage a list of important records
+2,User,See confirmation messages when I take actions,I know when I've successfully updated the system
+3,DevOps engineer,Deploy infrastructure using Terraform,I can automate and version control my environment
+4,DevOps engineer,Receive alerts if CPU or memory usage is too high,I can respond quickly to performance issues
+5,DevOps engineer,Store application logs in CloudWatch,I can troubleshoot issues after deployment
+6,Developer,Run automated security checks on my code,I can identify and fix vulnerabilities before production
+7,Developer,Run unit tests on every push,I can catch bugs early and ensure stability
+8,Platform administrator,View the current system health on a dashboard,I can monitor app availability and performance
