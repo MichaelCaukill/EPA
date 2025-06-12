@@ -8,27 +8,12 @@ on:
 
 jobs:
   test:
+    name: Run Unit Tests with SQLite
     runs-on: ubuntu-latest
 
-    services:
-      postgres:
-        image: postgres:15
-        env:
-          POSTGRES_DB: testdb
-          POSTGRES_USER: user
-          POSTGRES_PASSWORD: password
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd="pg_isready"
-          --health-interval=10s
-          --health-timeout=5s
-          --health-retries=5
-
     env:
-      DATABASE_URL: postgresql://user:password@localhost/testdb
+      DATABASE_URL: "sqlite:///:memory:"
       FLASK_DEBUG: false
-      FLASK_HOST: 127.0.0.1
 
     steps:
       - name: Checkout code
@@ -52,10 +37,11 @@ jobs:
         run: bandit -r app/
 
   terraform:
+    name: Terraform Format & Validate
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: ./  # Adjust if Terraform lives in a subdir
+        working-directory: ./  # Change if Terraform is in a subfolder
 
     steps:
       - name: Checkout code
