@@ -9,8 +9,15 @@ terraform apply -auto-approve
 echo "Updating Ansible inventory..."
 ./update_inventory.sh
 
-# Step 3: Run Ansible playbook to configure the server(s)
+# Step 2.5: Wait for EC2 instance to be ready
+echo "Waiting 30 seconds for EC2 instance to initialize SSH..."
+sleep 30
+
+# Step 3: Change to ansible folder
+cd ansible
+
+# Step 4: Run Ansible playbook to configure the server(s)
 echo "Running Ansible playbook..."
-ansible-playbook -i ansible/inventory.ini ansible/provision.yml
+ansible-playbook playbook.yml -i inventory.ini --ask-vault-pass
 
 echo "Deployment complete!"
