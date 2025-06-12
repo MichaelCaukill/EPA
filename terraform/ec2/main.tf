@@ -69,7 +69,7 @@ resource "aws_key_pair" "deployer" {
 
 # 4. (Optional) Save the private key locally for SSH access
 resource "local_file" "private_key" {
-  content          = tls_private_key.deployer.private_key_pem
-  filename         = "${path.module}/ephemeral_key.pem"
-  file_permission  = "0600"
+  content         = tls_private_key.deployer.private_key_pem
+  filename        = "${path.module}/ephemeral_key.pem"
+  file_permission = "0600"
 }
