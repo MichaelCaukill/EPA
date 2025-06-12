@@ -6,3 +6,4 @@ python-dotenv
 pymysql
 gunicorn
 cryptography
+pytest

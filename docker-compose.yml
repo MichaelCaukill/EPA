@@ -17,6 +17,7 @@ services:
       MYSQL_DATABASE: epadb
       MYSQL_USER: appuser
       MYSQL_PASSWORD: password
+      FLASK_DEBUG: "false"
     volumes:
       - db_data:/var/lib/mysql
     ports:
