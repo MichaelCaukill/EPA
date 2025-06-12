@@ -18,8 +18,9 @@ class Item(db.Model):
     description = db.Column(db.Text)
 
 # Create database tables if they don't exist
-with app.app_context():
-    db.create_all()
+if __name__ == '__main__':
+    with app.app_context():
+        db.create_all()
 
 @app.route('/')
 def index():
@@ -69,4 +70,8 @@ def delete_item(item_id):
 if __name__ == '__main__':
     # Use PORT environment variable or default to 8000
     port = int(os.getenv('PORT', 8000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    debug_mode = os.getenv("FLASK_DEBUG", "false").lower() == "true"
+    app.run(host='0.0.0.0', port=port, debug=debug_mode) # nosec B104
+
+# Export for testing and reuse
+__all__ = ['app', 'db', 'Item']
