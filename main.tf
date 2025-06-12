@@ -9,7 +9,7 @@ module "vpc" {
 
   aws_availability_a = "eu-west-2a"
   aws_availability_b = "eu-west-2b"
-  open_internet       = var.open_internet
+  open_internet      = var.open_internet
 }
 
 module "ec2" {
@@ -108,38 +108,38 @@ resource "aws_cloudwatch_dashboard" "epa_monitoring" {
     widgets = [
       {
         type = "metric",
-        x = 0, y = 0, width = 12, height = 6,
+        x    = 0, y = 0, width = 12, height = 6,
         properties = {
           metrics = [
-            [ "AWS/EC2", "CPUUtilization", "InstanceId", module.ec2.instance_id ]
+            ["AWS/EC2", "CPUUtilization", "InstanceId", module.ec2.instance_id]
           ],
-          stat = "Average",
+          stat   = "Average",
           region = var.region,
-          title = "CPU Utilization"
+          title  = "CPU Utilization"
         }
       },
       {
         type = "metric",
-        x = 0, y = 6, width = 12, height = 6,
+        x    = 0, y = 6, width = 12, height = 6,
         properties = {
           metrics = [
-            [ "CWAgent", "mem_used_percent", "InstanceId", module.ec2.instance_id ]
+            ["CWAgent", "mem_used_percent", "InstanceId", module.ec2.instance_id]
           ],
-          stat = "Average",
+          stat   = "Average",
           region = var.region,
-          title = "Memory Usage"
+          title  = "Memory Usage"
         }
       },
       {
         type = "metric",
-        x = 0, y = 12, width = 12, height = 6,
+        x    = 0, y = 12, width = 12, height = 6,
         properties = {
           metrics = [
-            [ "AWS/Logs", "IncomingLogEvents", "LogGroupName", "/epa/app" ]
+            ["AWS/Logs", "IncomingLogEvents", "LogGroupName", "/epa/app"]
           ],
-          stat = "Sum",
+          stat   = "Sum",
           region = var.region,
-          title = "Application Error Logs"
+          title  = "Application Error Logs"
         }
       }
     ]
