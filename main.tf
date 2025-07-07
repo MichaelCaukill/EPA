@@ -41,7 +41,7 @@ resource "aws_sns_topic" "alerts" {
 resource "aws_sns_topic_subscription" "email" {
   topic_arn = aws_sns_topic.alerts.arn
   protocol  = "email"
-  endpoint  = "michaelcaukill@gmail.com"
+  endpoint  = "michael.caukill@sky.uk"
 }
 
 # ---------------------------------------
@@ -53,9 +53,9 @@ resource "aws_cloudwatch_metric_alarm" "high_cpu" {
   evaluation_periods  = 2
   metric_name         = "CPUUtilization"
   namespace           = "AWS/EC2"
-  period              = 60
+  period              = 30
   statistic           = "Average"
-  threshold           = 80
+  threshold           = 20
   alarm_description   = "CPU usage over 80%"
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.alerts.arn]
@@ -72,7 +72,7 @@ resource "aws_cloudwatch_metric_alarm" "high_memory" {
   namespace           = "CWAgent"
   period              = 60
   statistic           = "Average"
-  threshold           = 80
+  threshold           = 20
   alarm_description   = "Memory usage over 80%"
   actions_enabled     = true
   alarm_actions       = [aws_sns_topic.alerts.arn]
